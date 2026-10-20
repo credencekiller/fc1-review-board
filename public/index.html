@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>FC-1 Review Board</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <h1>FC-1 Review Board</h1>
+
+  <div class="box">
+    <h2>Login</h2>
+    <input id="lemail" placeholder="Email">
+    <input id="lpass" type="password" placeholder="Password">
+    <button onclick="login()">Login</button>
+  </div>
+
+  <div class="box">
+    <h2>Signup</h2>
+    <input id="sname" placeholder="Name">
+    <input id="semail" placeholder="Email">
+    <input id="spass" type="password" placeholder="Password">
+    <button onclick="signup()">Signup</button>
+  </div>
+
+  <p id="msg" style="text-align:center"></p>
+
+  <script>
+    function post(url, data) {
+      return fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      }).then(function (res) { return res.json(); });
+    }
+
+    function login() {
+      post('/api/login', {
+        email: document.getElementById('lemail').value,
+        password: document.getElementById('lpass').value
+      }).then(function (d) {
+        if (d.error) {
+          document.getElementById('msg').innerText = d.error;
+          return;
+        }
+        localStorage.setItem('token', d.token);
+        localStorage.setItem('name', d.name);
+        localStorage.setItem('role', d.role);
+        location.href = 'home.html';
+      });
+    }
+
+    function signup() {
+      post('/api/signup', {
+        name: document.getElementById('sname').value,
+        email: document.getElementById('semail').value,
+        password: document.getElementById('spass').value
+      }).then(function (d) {
+        document.getElementById('msg').innerText = d.error || d.message;
+      });
+    }
+  </script>
+</body>
+</html>

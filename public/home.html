@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Menu - FC-1</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="nav"></div>
+  <div class="page">
+    <h2>FC-1 Menu</h2>
+    Date: <input type="date" id="date" onchange="load()">
+    <div id="list"></div>
+  </div>
+
+  <script src="app.js"></script>
+  <script>
+    showNav();
+    document.getElementById('date').value = today();
+
+    function load() {
+      api('/api/menu?date=' + document.getElementById('date').value).then(function (items) {
+        let html = '';
+        if (items.length == 0) html = '<p>No menu added for this day.</p>';
+        ['Breakfast', 'Lunch', 'Dinner'].forEach(function (meal) {
+          const list = items.filter(function (i) { return i.meal == meal; });
+          if (list.length == 0) return;
+          html += '<h3>' + meal + '</h3>';
+          list.forEach(function (i) {
+            html += '<div class="card"><b>' + esc(i.dish) + '</b>';
+            html += '<span class="avg">' + (i.avg ? i.avg + ' / 5 (' + i.total + ' ratings)' : 'No ratings yet') + '</span><br>';
+            html += 'Your rating: ';
+            for (let s = 1; s <= 5; s++) {
+              html += '<button class="star ' + (i.mine >= s ? 'on' : '') + '" onclick="rate(' + i.id + ',' + s + ')">' + s + '</button>';
+            }
+            html += '<br><button onclick="showComments(' + i.id + ')">Comments</button>';
+            html += '<div id="c' + i.id + '"></div></div>';
+          });
+        });
+        document.getElementById('list').innerHTML = html;
+      });
+    }
+
+    function rate(id, stars) {
+      api('/api/rate', 'POST', { menu_id: id, stars: stars }).then(load);
+    }
+
+    function showComments(id) {
+      api('/api/comments/' + id).then(function (list) {
+        let html = '';
+        list.forEach(function (c) {
+          html += '<p class="comment"><b>' + esc(c.name) + ':</b> ' + esc(c.text) + '</p>';
+        });
+        html += '<input id="t' + id + '" placeholder="Write a comment">';
+        html += '<button onclick="addComment(' + id + ')">Post</button>';
+        document.getElementById('c' + id).innerHTML = html;
+      });
+    }
+
+    function addComment(id) {
+      const text = document.getElementById('t' + id).value;
+      api('/api/comments', 'POST', { menu_id: id, text: text }).then(function () {
+        showComments(id);
+      });
+    }
+
+    load();
+  </script>
+</body>
+</html>

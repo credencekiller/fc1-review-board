@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Admin - FC-1</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="nav"></div>
+  <div class="page">
+    <h2>Add Menu</h2>
+    <div class="card">
+      <input type="date" id="date" onchange="load()">
+      <select id="meal">
+        <option>Breakfast</option>
+        <option>Lunch</option>
+        <option>Dinner</option>
+      </select>
+      <input id="dish" placeholder="Dish name">
+      <button onclick="add()">Add</button>
+      <p id="msg"></p>
+    </div>
+    <h3>Menu for this date</h3>
+    <div id="list"></div>
+  </div>
+
+  <script src="app.js"></script>
+  <script>
+    showNav();
+    if (localStorage.getItem('role') !== 'admin') location.href = 'home.html';
+    document.getElementById('date').value = today();
+
+    function add() {
+      api('/api/menu', 'POST', {
+        date: document.getElementById('date').value,
+        meal: document.getElementById('meal').value,
+        dish: document.getElementById('dish').value
+      }).then(function (d) {
+        document.getElementById('msg').innerText = d.error || d.message;
+        document.getElementById('dish').value = '';
+        load();
+      });
+    }
+
+    function load() {
+      api('/api/menu?date=' + document.getElementById('date').value).then(function (items) {
+        let html = '';
+        items.forEach(function (i) {
+          html += '<div class="card">' + i.meal + ' - <b>' + esc(i.dish) + '</b> ';
+          html += '<button class="red" onclick="del(' + i.id + ')">Delete</button></div>';
+        });
+        document.getElementById('list').innerHTML = html || '<p>Nothing added yet.</p>';
+      });
+    }
+
+    function del(id) {
+      if (confirm('Delete this dish?')) api('/api/menu/' + id, 'DELETE').then(load);
+    }
+
+    load();
+  </script>
+</body>
+</html>

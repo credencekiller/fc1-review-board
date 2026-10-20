@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Stats - FC-1</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+  <div id="nav"></div>
+  <div class="page">
+    <h2>Weekly Ratings</h2>
+    <div class="card"><canvas id="chart"></canvas></div>
+    <div class="card" id="best"></div>
+    <div class="card" id="worst"></div>
+  </div>
+
+  <script src="app.js"></script>
+  <script>
+    showNav();
+
+    api('/api/stats').then(function (d) {
+      new Chart(document.getElementById('chart'), {
+        type: 'bar',
+        data: {
+          labels: d.days.map(function (x) { return x.date; }),
+          datasets: [{
+            label: 'Average rating',
+            data: d.days.map(function (x) { return x.avg; }),
+            backgroundColor: '#3b6ea5'
+          }]
+        },
+        options: { scales: { y: { min: 0, max: 5 } } }
+      });
+
+      if (d.best) {
+        document.getElementById('best').innerHTML = '<b>Best dish this week:</b> ' + esc(d.best.dish) + ' (' + d.best.avg + ' / 5)';
+        document.getElementById('worst').innerHTML = '<b>Worst dish this week:</b> ' + esc(d.worst.dish) + ' (' + d.worst.avg + ' / 5)';
+      } else {
+        document.getElementById('best').innerHTML = 'No ratings this week yet.';
+        document.getElementById('worst').style.display = 'none';
+      }
+    });
+  </script>
+</body>
+</html>
